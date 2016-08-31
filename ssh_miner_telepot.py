@@ -59,6 +59,7 @@ def checkHash():
                     sendMessageToidList(mess)
 
                 elif timeGap > 5:
+                    print timeGap
                     mess = " Warning: the miner %s stoped! " % str(i)
                     sendMessageToidList(mess)
 
