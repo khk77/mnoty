@@ -73,7 +73,7 @@ def checkHash():
                 # mess = " Warning: the miner %s erro " % str(i)
                 # sendMessageToidList(mess)
 
-        time.sleep(3)
+        time.sleep(180)
 
 def sendMessageToidList(message):
     # bot.sendMessage(161289242, message)
