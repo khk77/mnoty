@@ -24,7 +24,7 @@ mongoClient = pymongo.MongoClient("52.78.93.195", 27017)
 mongoDB = mongoClient.di
 
 # tokenlist = ["254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk"]
-idlist = [161289242, 33612976]
+idlist = [161289242,33612976]
 # idlist = [161289242]
 bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
 
@@ -58,38 +58,48 @@ def checkHash():
                 if i in miners_no_log :
                     print "miner %d LOG does not exist" %i
 
-                elif bool(re.search('MH/s', logToStr)) == None :
-                    mess = "LOG : the miner %s hashrate is '0' " % str(i)
-                    # print mess
-                    sendMessageToidList(mess)
-
-                # elif i in miners_no_log :
-                #     print "miner %d LOG does not exist" %i
-
                 else :
-                    #lastLogTime 최신 마지막 로그 기록 type은 string
-                    lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
-                    # print 'lastLogTime', lastLogTime
-                    FMT = '%H:%M:%S'
+                    res= mongoDB["miner"+str(i)].find(sort=[("_id",-1)]).limit(1).next()
+                    totalhash = res["hashrate"]+res["hashrateC"]
+                    print i, "totalhash", totalhash
 
-                    nowTimeStr = datetime.now().strftime(FMT)
-                    # print 'nowTimeStr', nowTimeStr
-
-                    timeGap = int(nowTimeStr.split(':')[1]) - int(lastLogTime.split(':')[1])
-                    timeGap = abs(timeGap)
-
-                    # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
-                    # # timeGap 단위는 minutes임
-                    # timeGap = tdelta.seconds/60
-
-                    # print "timeGap:", timeGap
-
-                    if timeGap > 5:
-                        mess = " Warning: the miner %s stoped! " % str(i)
-                        print mess
+                    if totalhash == 0 :
+                        mess = "DB : the miner %s hashrate is '0' " % str(i)
+                        # print mess
                         sendMessageToidList(mess)
-                    else:
-                        print "miner %s is operating.." % str(i)
+
+                    elif bool(re.search('MH/s', logToStr)) == None :
+                        mess = "LOG : the miner %s hashrate is '0' " % str(i)
+                        # print mess
+                        sendMessageToidList(mess)
+
+                    # elif i in miners_no_log :
+                    #     print "miner %d LOG does not exist" %i
+
+                    else :
+                        #lastLogTime 최신 마지막 로그 기록 type은 string
+                        lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
+                        print 'lastLogTime', lastLogTime
+                        FMT = '%H:%M:%S'
+
+                        nowTimeStr = datetime.now().strftime(FMT)
+                        print 'nowTimeStr', nowTimeStr
+
+                        timeGap = int(nowTimeStr.split(':')[1]) - int(lastLogTime.split(':')[1])
+                        timeGap = abs(timeGap)
+
+                        # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
+                        # # timeGap 단위는 minutes임
+                        # timeGap = tdelta.seconds/60
+
+                        print "timeGap:", timeGap
+
+                        if timeGap > 5:
+                            mess = " Warning: the miner %s stoped! " % str(i)
+                            print mess
+                            sendMessageToidList(mess)
+                        else:
+                            print "miner %s is operating.." % str(i)
 
             except Exception as e:
                 m, r = "miner %s [Error Occured] : " % str(i), e
