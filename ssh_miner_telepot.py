@@ -68,7 +68,7 @@ def checkHash():
                     nowTimeStr = datetime.now().strftime(FMT)
                     print 'nowTimeStr', nowTimeStr
 
-                    timeGap = int(nowTimeStr.split(':')[2]) - int(nowTimeStr.split(':')[2])
+                    timeGap = int(nowTimeStr.split(':')[2]) - int(lastLogTime.split(':')[2])
                     timeGap = abs(timeGap)
 
                     # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
@@ -77,7 +77,7 @@ def checkHash():
 
                     print "timeGap:", timeGap
 
-                    if timeGap > 6:
+                    if timeGap > 4:
                         mess = " Warning: the miner %s stoped! " % str(i)
                         print mess
                         sendMessageToidList(mess)
@@ -91,7 +91,7 @@ def checkHash():
                 sendMessageToidList(mess)
 
         # time.sleep(60)
-        time.sleep(180)
+        time.sleep(120)
 
 def sendMessageToidList(message):
     # bot.sendMessage(161289242, message)
