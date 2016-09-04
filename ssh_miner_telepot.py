@@ -24,8 +24,8 @@ mongoClient = pymongo.MongoClient("52.78.93.195", 27017)
 mongoDB = mongoClient.di
 
 # tokenlist = ["254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk"]
-# idlist = [161289242,33612976]
-idlist = [161289242]
+idlist = [161289242,33612976]
+# idlist = [161289242]
 bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
 
 
@@ -90,8 +90,8 @@ def checkHash():
                 print mess
                 sendMessageToidList(mess)
 
-        time.sleep(60)
-        # time.sleep(180)
+        # time.sleep(60)
+        time.sleep(180)
 
 def sendMessageToidList(message):
     # bot.sendMessage(161289242, message)
