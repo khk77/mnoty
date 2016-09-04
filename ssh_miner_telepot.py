@@ -8,20 +8,24 @@ import re
 import copy
 import pprint
 from datetime import datetime, timedelta
-# 2번 지움
-miners_farm1 = [1,3,4,5,6,8,14]
-# 9번 지움
-miners_farm2 = [10,11,12]
+
+# miners_no_log 로그 없는 마이너들
+miners_no_log = [2, 9, 7, 13, 14, 37]
+#2,9윈도우. 13,14열린 포트 없음. 7,37장비 없음.
+miners_farm1 = [1,3,4,5,6,8]
+miners_farm2 = [2, 9, 10, 11, 12, 13, 14]
 miners_farm3 = [i for i in range(15,39) if i is not 37 ]
-#2,9윈도우, 7,13,37없음
 miner_list = miners_farm1 + miners_farm2 + miners_farm3
 cp_miner_list = copy.deepcopy(miner_list)
+
+
 
 mongoClient = pymongo.MongoClient("52.78.93.195", 27017)
 mongoDB = mongoClient.di
 
 # tokenlist = ["254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk"]
-idlist = [161289242,33612976]
+# idlist = [161289242,33612976]
+idlist = [161289242]
 bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
 
 
@@ -37,44 +41,57 @@ def checkHash():
         # print 'mlist', mlist
 
         for i in mlist:
-            try:
+            try :
+                # logList, nowTimeStr = paramiko(i)
+                # print 'nowTimeStr', nowTimeStr
                 logList = paramiko(i)
-
-
-                #lastLogTime 최신 마지막 로그 기록 type은 string
-                lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
-                FMT = '%H:%M:%S'
-                nowTimeStr = datetime.now().strftime(FMT)
-                tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
-                # timeGap 단위는 minutes임
-                timeGap = tdelta.seconds/60
 
                 logToStr = " ".join(logList)
                 logToStr = logToStr.encode('utf-8')
                 # print "logToStr: ", type(logToStr)
                 # print logToStr
 
-                if bool(re.search('MH/s', logToStr)) == None:
+                if bool(re.search('MH/s', logToStr)) == None :
                     mess = " Warning: the miner %s hashrate is '0' " % str(i)
+                    # print mess
                     sendMessageToidList(mess)
 
-                elif timeGap > 5:
-                    print timeGap
-                    mess = " Warning: the miner %s stoped! " % str(i)
-                    sendMessageToidList(mess)
+                elif i in miners_no_log :
+                    print "miner %d LOG does not exist" %i
 
-                else:
-                    if i in [2, 9, 7, 13, 37]:
-                        print "miner %d LOG does not exist" %i
+                else :
+                    #lastLogTime 최신 마지막 로그 기록 type은 string
+                    lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
+                    print 'lastLogTime', lastLogTime
+                    FMT = '%H:%M:%S'
+
+                    nowTimeStr = datetime.now().strftime(FMT)
+                    print 'nowTimeStr', nowTimeStr
+
+                    timeGap = int(nowTimeStr.split(':')[2]) - int(nowTimeStr.split(':')[2])
+                    timeGap = abs(timeGap)
+
+                    # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
+                    # # timeGap 단위는 minutes임
+                    # timeGap = tdelta.seconds/60
+
+                    print "timeGap:", timeGap
+
+                    if timeGap > 6:
+                        mess = " Warning: the miner %s stoped! " % str(i)
+                        print mess
+                        sendMessageToidList(mess)
                     else:
                         print "miner %s is operating.." % str(i)
 
             except Exception as e:
-                print "miner %s [Error Occured] : " % str(i), e
-                # mess = " Warning: the miner %s erro " % str(i)
-                # sendMessageToidList(mess)
+                m, r = "miner %s [Error Occured] : " % str(i), e
+                mess = m + repr(r)
+                print mess
+                sendMessageToidList(mess)
 
-        time.sleep(180)
+        time.sleep(60)
+        # time.sleep(180)
 
 def sendMessageToidList(message):
     # bot.sendMessage(161289242, message)
@@ -94,12 +111,13 @@ def sendMessageToidList(message):
 
 def paramiko(minerNum):
     # result = ""
-    if minerNum in [2, 9, 7, 13, 37]:
+    if minerNum in miners_no_log :
         result = "miner %d LOG does not exist" %minerNum
 
     # elif (minerNum < 9) or (minerNum == 14) :
     elif (minerNum < 9):
         client = wrap.SSHClient('222.98.97.238', 50000+int(minerNum), 'miner'+str(minerNum), 'rlagnlrud' )
+
         # result is list type
         result = client.execute('tail -10 ethminer.err.log')['out']
         # a = result.encode('utf-8').....에러
@@ -107,7 +125,7 @@ def paramiko(minerNum):
         # print len(result)
 
     elif minerNum in [10,11,12,14]:
-        portMapping = {10:22, 11:443, 12:444, 14:21}
+        portMapping = {10:22, 11:443, 12:444}
         client = wrap.SSHClient('ggs134.gonetis.com', portMapping[int(minerNum)], 'miner'+str(minerNum), 'rlagnlrud' )
         result = client.execute('tail -10 ethminer.err.log')['out']
 
@@ -115,7 +133,10 @@ def paramiko(minerNum):
         client = wrap.SSHClient('goldrush.iptime.org', 50000+int(minerNum), 'miner'+str(minerNum), 'rlagnlrud' )
         result = client.execute('tail -10 ethminer.err.log')['out']
 
+    # nowTimeStr = datetime.now().strftime('%H:%M:%S')
+    # return result, nowTimeStr
     return result
+
 
 # def recmessage(tokenlist):
 #     result=[]
@@ -124,24 +145,28 @@ def paramiko(minerNum):
 #             result.append(j.getUpdates()[-1]['message']['text'])
 
 
-
 # 텔레그램에 로그 확인 log(숫자) 메세지 보내면 텔레그램에서 로그 보여줌
 def recieveMessage(id, msg):
     # while 1:
         # response = bot.getUpdates()
     res = msg['text']
 
-    if bool(re.search('log\(*', res)) == True:
+    # if bool(re.search('l(?i)og\(*', res)) == True:
+    if bool(re.search("log", res)) == True:
         # type(res) is list
-        res = re.findall(r"[0-9]+",res)
+        res = re.findall(r"[0-9]*",res)
         # type(res[0]) is string
-        minerNum = res[0]
+        minerNum = res[3]
         # type(minerNum) is string
-        result = paramiko(minerNum)
+        result1 = paramiko(int(minerNum))
+        result = convert_list(result1)
         # type(result) is list
         # sendMessage(result)
+        print result
         bot.sendMessage(id, result)
-    elif bool(re.search('turnoff\(*', res)) == True:
+
+    # on off = 알람 끄고 켜기
+    elif bool(re.search('off', res)) == True:
         res = re.findall(r"[0-9]+",res)
         minerNum = res[0]
         # print minerNum
@@ -149,20 +174,28 @@ def recieveMessage(id, msg):
         # sendMessage('TurnOff miner%s' % minerNum)
         bot.sendMessage(id, 'yes, turnoff miner%s' % minerNum)
 
-    elif bool(re.search('turnon\(*', res)) == True:
+    elif bool(re.search('on', res)) == True:
         res = re.findall(r"[0-9]+",res)
         minerNum = res[0]
         cp_miner_list.append(int(minerNum))
         # sendMessage('TurnOn miner%s' % minerNum)
         bot.sendMessage(id, 'yes, turnon miner%s' % minerNum)
 
+    # 알람 켜진 마이너 리스트
     elif bool(re.search('list', res)) == True:
+        for i in miners_no_log:
+            if i in cp_miner_list:
+                cp_miner_list.remove(i)
+
+        print cp_miner_list
+
         mlist= str(cp_miner_list)
         bot.sendMessage(id, 'Operating miner numers are %s' % mlist)
 
     else:
         pass
     # time.sleep(20)
+
 
 def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
@@ -171,6 +204,12 @@ def handle(msg):
         # pprint.pprint(msg)
         recieveMessage(chat_id, msg)
 
+def convert_list(lst):
+    newLst = [i.encode("utf-8").replace("[","") for i in lst]
+    res = [re.sub(r"\d{2}m|\d{1}m","",j).decode("utf-8") for j in newLst ]
+
+    # res = [str(i) for i in lst]
+    return res
 
 # def fromid(idlist):
 #     fromid_list = []
