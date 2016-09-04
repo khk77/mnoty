@@ -10,8 +10,8 @@ import pprint
 from datetime import datetime, timedelta
 
 # miners_no_log 로그 없는 마이너들
-miners_no_log = [2, 9, 7, 13, 14, 37]
 #2,9윈도우. 13,14열린 포트 없음. 7,37장비 없음.
+miners_no_log = [2, 9, 7, 13, 14, 37]
 miners_farm1 = [1,3,4,5,6,8]
 miners_farm2 = [2, 9, 10, 11, 12, 13, 14]
 miners_farm3 = [i for i in range(15,39) if i is not 37 ]
@@ -39,6 +39,10 @@ def checkHash():
             # print '2) cp_miner_list', cp_miner_list
             mlist = cp_miner_list
         # print 'mlist', mlist
+        # for i in miners_no_log:
+        #     if i in cp_miner_list:
+        #         cp_miner_list.remove(i)
+        # mlist = cp_miner_list
 
         for i in mlist:
             try :
@@ -51,38 +55,50 @@ def checkHash():
                 # print "logToStr: ", type(logToStr)
                 # print logToStr
 
-                if bool(re.search('MH/s', logToStr)) == None :
-                    mess = " Warning: the miner %s hashrate is '0' " % str(i)
-                    # print mess
-                    sendMessageToidList(mess)
-
-                elif i in miners_no_log :
+                if i in miners_no_log :
                     print "miner %d LOG does not exist" %i
-
                 else :
-                    #lastLogTime 최신 마지막 로그 기록 type은 string
-                    lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
-                    print 'lastLogTime', lastLogTime
-                    FMT = '%H:%M:%S'
+                    res= mongoDB["miner"+str(i)].find(sort=[("_id",-1)]).limit(1).next()
+                    totalhash = res["hashrate"]+res["hashrateC"]
+                    print i, "totalhash", totalhash
 
-                    nowTimeStr = datetime.now().strftime(FMT)
-                    print 'nowTimeStr', nowTimeStr
-
-                    timeGap = int(nowTimeStr.split(':')[2]) - int(lastLogTime.split(':')[2])
-                    timeGap = abs(timeGap)
-
-                    # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
-                    # # timeGap 단위는 minutes임
-                    # timeGap = tdelta.seconds/60
-
-                    print "timeGap:", timeGap
-
-                    if timeGap > 4:
-                        mess = " Warning: the miner %s stoped! " % str(i)
-                        print mess
+                    if totalhash == 0 :
+                        mess = "DB : the miner %s hashrate is '0' " % str(i)
+                        # print mess
                         sendMessageToidList(mess)
-                    else:
-                        print "miner %s is operating.." % str(i)
+
+                    elif bool(re.search('MH/s', logToStr)) == None :
+                        mess = "LOG : the miner %s hashrate is '0' " % str(i)
+                        # print mess
+                        sendMessageToidList(mess)
+
+                    # elif i in miners_no_log :
+                    #     print "miner %d LOG does not exist" %i
+
+                    else :
+                        #lastLogTime 최신 마지막 로그 기록 type은 string
+                        lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
+                        print 'lastLogTime', lastLogTime
+                        FMT = '%H:%M:%S'
+
+                        nowTimeStr = datetime.now().strftime(FMT)
+                        print 'nowTimeStr', nowTimeStr
+
+                        timeGap = int(nowTimeStr.split(':')[1]) - int(lastLogTime.split(':')[1])
+                        timeGap = abs(timeGap)
+
+                        # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
+                        # # timeGap 단위는 minutes임
+                        # timeGap = tdelta.seconds/60
+
+                        print "timeGap:", timeGap
+
+                        if timeGap > 5:
+                            mess = " Warning: the miner %s stoped! " % str(i)
+                            print mess
+                            sendMessageToidList(mess)
+                        else:
+                            print "miner %s is operating.." % str(i)
 
             except Exception as e:
                 m, r = "miner %s [Error Occured] : " % str(i), e
@@ -90,8 +106,8 @@ def checkHash():
                 print mess
                 sendMessageToidList(mess)
 
-        # time.sleep(60)
-        time.sleep(120)
+        # time.sleep(120)
+        time.sleep(300)
 
 def sendMessageToidList(message):
     # bot.sendMessage(161289242, message)
@@ -152,7 +168,7 @@ def recieveMessage(id, msg):
     res = msg['text']
 
     # if bool(re.search('l(?i)og\(*', res)) == True:
-    if bool(re.search("log", res)) == True:
+    if bool(re.search("l(?i)og", res)) == True:
         # type(res) is list
         res = re.findall(r"[0-9]*",res)
         # type(res[0]) is string
@@ -166,7 +182,7 @@ def recieveMessage(id, msg):
         bot.sendMessage(id, result)
 
     # on off = 알람 끄고 켜기
-    elif bool(re.search('off', res)) == True:
+    elif bool(re.search('o(?i)ff', res)) == True:
         res = re.findall(r"[0-9]+",res)
         minerNum = res[0]
         # print minerNum
@@ -174,7 +190,7 @@ def recieveMessage(id, msg):
         # sendMessage('TurnOff miner%s' % minerNum)
         bot.sendMessage(id, 'yes, turnoff miner%s' % minerNum)
 
-    elif bool(re.search('on', res)) == True:
+    elif bool(re.search('o(?i)n', res)) == True:
         res = re.findall(r"[0-9]+",res)
         minerNum = res[0]
         cp_miner_list.append(int(minerNum))
@@ -182,7 +198,7 @@ def recieveMessage(id, msg):
         bot.sendMessage(id, 'yes, turnon miner%s' % minerNum)
 
     # 알람 켜진 마이너 리스트
-    elif bool(re.search('list', res)) == True:
+    elif bool(re.search('l(?i)ist', res)) == True:
         for i in miners_no_log:
             if i in cp_miner_list:
                 cp_miner_list.remove(i)
