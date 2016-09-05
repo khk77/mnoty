@@ -10,8 +10,8 @@ import pprint
 from datetime import datetime, timedelta
 
 # miners_no_log 로그 없는 마이너들
-#2,9윈도우. 13,14열린 포트 없음. 7,37장비 없음.
-miners_no_log = [2, 9, 7, 13, 14, 37]
+#2,9윈도우. 7,37장비 없음.
+miners_no_log = [2, 9, 7, 37]
 miners_farm1 = [1,3,4,5,6,8]
 miners_farm2 = [2, 9, 10, 11, 12, 13, 14]
 miners_farm3 = [i for i in range(15,39) if i is not 37 ]
@@ -24,7 +24,7 @@ mongoClient = pymongo.MongoClient("52.78.93.195", 27017)
 mongoDB = mongoClient.di
 
 # tokenlist = ["254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk"]
-idlist = [161289242, 33612976]
+idlist = [161289242, 33612976, 180121526]
 # idlist = [161289242]
 bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
 
@@ -32,17 +32,17 @@ bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
 # DB에서 데이터 받아서 20초 마다 ‘0’해시 확인
 def checkHash():
     while True:
-        # print '1) cp_miner_list', cp_miner_list
-        if set(miner_list) == set(cp_miner_list):
-            mlist = miner_list
-        else:
-            # print '2) cp_miner_list', cp_miner_list
-            mlist = cp_miner_list
+        # # print '1) cp_miner_list', cp_miner_list
+        # if set(miner_list) == set(cp_miner_list):
+        #     mlist = miner_list
+        # else:
+        #     # print '2) cp_miner_list', cp_miner_list
+        #     mlist = cp_miner_list
         # print 'mlist', mlist
-        # for i in miners_no_log:
-        #     if i in cp_miner_list:
-        #         cp_miner_list.remove(i)
-        # mlist = cp_miner_list
+        for i in miners_no_log:
+            if i in cp_miner_list:
+                cp_miner_list.remove(i)
+        mlist = cp_miner_list
 
         for i in mlist:
             try :
@@ -55,12 +55,14 @@ def checkHash():
                 # print "logToStr: ", type(logToStr)
                 # print logToStr
 
-                if i in miners_no_log :
-                    print "miner %d LOG does not exist" %i
+                # if i in miners_no_log :
+                #     print "miner %d LOG does not exist" %i
 
-                elif bool(re.search('MH/s', logToStr)) == None :
+                if bool(re.search('MH/s', logToStr)) == None :
+                    print '111111'
                     mess = "LOG : the miner %s hashrate is '0' " % str(i)
-                    # print mess
+                    print '222222'
+                    print mess
                     sendMessageToidList(mess)
 
                 # elif i in miners_no_log :
@@ -84,7 +86,7 @@ def checkHash():
 
                     # print "timeGap:", timeGap
 
-                    if timeGap > 5:
+                    if timeGap > 4:
                         mess = " Warning: the miner %s stoped! " % str(i)
                         print mess
                         sendMessageToidList(mess)
@@ -117,7 +119,10 @@ def sendMessageToidList(message):
 
 
 def paramiko(minerNum):
+    # try:
     # result = ""
+
+
     if minerNum in miners_no_log :
         result = "miner %d LOG does not exist" %minerNum
 
@@ -131,8 +136,8 @@ def paramiko(minerNum):
         # print a ...리스트
         # print len(result)
 
-    elif minerNum in [10,11,12,14]:
-        portMapping = {10:22, 11:443, 12:444}
+    elif minerNum in [10,11,12,13,14]:
+        portMapping = {9:8080,  10:22, 11:443, 12:444, 13:80, 14:3390}
         client = wrap.SSHClient('ggs134.gonetis.com', portMapping[int(minerNum)], 'miner'+str(minerNum), 'rlagnlrud' )
         result = client.execute('tail -10 ethminer.err.log')['out']
 
@@ -143,6 +148,10 @@ def paramiko(minerNum):
     # nowTimeStr = datetime.now().strftime('%H:%M:%S')
     # return result, nowTimeStr
     return result
+
+
+    # except Exception as e:
+    #     pass
 
 
 # def recmessage(tokenlist):
