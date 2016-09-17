@@ -50,7 +50,7 @@ def checkHash():
                 # logList, nowTimeStr = logging(i)
                 # print 'nowTimeStr', nowTimeStr
                 logList = logging(i)
-                print logList
+                print 'logList', logList
                 logToStr = " ".join(logList)
                 logToStr = logToStr.encode('utf-8')
                 # print "logToStr: ", type(logToStr)
