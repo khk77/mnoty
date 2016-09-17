@@ -81,7 +81,7 @@ def checkHash():
                     # print type(lastLogTime)
                     print 'logToStr','\n', logToStr
                     print 'lastLogTime', lastLogTime
-                    print 'logList[9]: ', logList[-1]
+                    # print 'logList[9]: ', logList[-1]
                     print '.split(): ',logList[-1].split()
                     print '.split()[2]: ',logList[-1].split()[2]
                     # print '[9][0]: ', (re.findall("\d{2}:\d{2}:\d{2}",logList[-1])[0]).encode('utf-8')
