@@ -24,8 +24,8 @@ mongoClient = pymongo.MongoClient("52.78.93.195", 27017)
 mongoDB = mongoClient.di
 
 
-# idlist = [161289242, 33612976, 180121526]
-idlist = [161289242]
+idlist = [161289242, 33612976, 180121526]
+# idlist = [161289242]
 bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
 
 
@@ -50,7 +50,7 @@ def checkHash():
                 # logList, nowTimeStr = logging(i)
                 # print 'nowTimeStr', nowTimeStr
                 logList = logging(i)
-
+                print logList
                 logToStr = " ".join(logList)
                 logToStr = logToStr.encode('utf-8')
                 # print "logToStr: ", type(logToStr)
@@ -70,10 +70,20 @@ def checkHash():
                 # print "miner %d LOG does not exist" %i
 
                 elif bool(re.search('Subscribed to stratum server', logToStr)) == True :
+                    print 'ok'
+                    print 'stratum server', re.search('Subscribed to stratum server', logToStr)
                     mess = " miner%s: Subscribed to stratum server" % str(i)
+                    sendMessageToidList(mess)
 
                 elif bool(re.search('Submitting stale solution.', logToStr)) == True :
-                    mess = " miner%s: stale " % str(i)
+                    print 'stale', re.search('Submitting stale solution.', logToStr)
+                    mess = " miner%s: Submitting stale solution. " % str(i)
+                    sendMessageToidList(mess)
+
+                elif bool(re.search('FAILURE:', logToStr)) == True :
+                    print 'FAILURE', re.search('FAILURE:', logToStr)
+                    mess = " miner%s: FAILURE:GPU gave incorrect result! " % str(i)
+                    sendMessageToidList(mess)
 
                 else:
                     #lastLogTime 최신 마지막 로그 기록 type은 string
@@ -82,15 +92,22 @@ def checkHash():
                     # print logList[9].split(), '\n'
                     # print logList[9].split()[2], '\n'
 
-                    lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
+                    lastLogTime = (re.findall("\d{2}:\d{2}:\d{2}",logList[-1])[0]).encode('utf-8')
+                    # lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
                     # print type(lastLogTime)
+                    print 'logToStr','\n', logToStr
                     print 'lastLogTime', lastLogTime
-                    print ':-----',lastLogTime.split(':')
-                    print 'len-----',len(lastLogTime.split(':'))
-                    print '1-----',lastLogTime.split(':')[1]
-                    print 'i0-----',int(lastLogTime.split(':')[0])
-                    print 'i1-----',int(lastLogTime.split(':')[1])
-                    print 'i2-----',int(lastLogTime.split(':')[2])
+                    print 'logList[9]: ', logList[-1]
+                    print '.split(): ',logList[-1].split()
+                    print '.split()[2]: ',logList[-1].split()[2]
+                    print '[9][0]: ', (re.findall("\d{2}:\d{2}:\d{2}",logList[9])[0]).encode('utf-8')
+
+                    # print ':-----',lastLogTime.split(':')
+                    # print 'len-----',len(lastLogTime.split(':'))
+                    # print '1-----',lastLogTime.split(':')[1]
+                    # print 'i0-----',int(lastLogTime.split(':')[0])
+                    # print 'i1-----',int(lastLogTime.split(':')[1])
+                    # print 'i2-----',int(lastLogTime.split(':')[2])
                     FMT = '%H:%M:%S'
                     # print lastLogTime
 
@@ -152,11 +169,11 @@ def logging(minerNum):
     # try:
     # result = ""
 
-    if minerNum in miners_no_log :
-        result = "miner%d: LOG does not exist" % minerNum
+    # if minerNum in miners_no_log :
+    #     result = "miner%d: LOG does not exist" % minerNum
 
     # elif (minerNum < 9) or (minerNum == 14) :
-    elif (minerNum < 9) | (minerNum == 14):
+    if (minerNum < 9) | (minerNum == 14):
         client = wrap.SSHClient('222.98.97.238', 50000+int(minerNum), 'miner'+str(minerNum), 'rlagnlrud' )
 
         # result is list type
