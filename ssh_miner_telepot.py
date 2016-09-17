@@ -69,22 +69,6 @@ def checkHash():
                 # elif i in miners_no_log :
                 # print "miner %d LOG does not exist" %i
 
-                elif bool(re.search('Subscribed to stratum server', logToStr)) == True :
-                    print 'ok'
-                    print 'stratum server', re.search('Subscribed to stratum server', logToStr)
-                    mess = " miner%s: Subscribed to stratum server" % str(i)
-                    sendMessageToidList(mess)
-
-                elif bool(re.search('Submitting stale solution.', logToStr)) == True :
-                    print 'stale', re.search('Submitting stale solution.', logToStr)
-                    mess = " miner%s: Submitting stale solution. " % str(i)
-                    sendMessageToidList(mess)
-
-                elif bool(re.search('FAILURE:', logToStr)) == True :
-                    print 'FAILURE', re.search('FAILURE:', logToStr)
-                    mess = " miner%s: FAILURE:GPU gave incorrect result! " % str(i)
-                    sendMessageToidList(mess)
-
                 else:
                     #lastLogTime 최신 마지막 로그 기록 type은 string
                     # print logList, '\n'
@@ -100,7 +84,7 @@ def checkHash():
                     print 'logList[9]: ', logList[-1]
                     print '.split(): ',logList[-1].split()
                     print '.split()[2]: ',logList[-1].split()[2]
-                    print '[9][0]: ', (re.findall("\d{2}:\d{2}:\d{2}",logList[9])[0]).encode('utf-8')
+                    # print '[9][0]: ', (re.findall("\d{2}:\d{2}:\d{2}",logList[-1])[0]).encode('utf-8')
 
                     # print ':-----',lastLogTime.split(':')
                     # print 'len-----',len(lastLogTime.split(':'))
@@ -134,6 +118,23 @@ def checkHash():
                         mess = " miner%s: stop! " % str(i)
                         print mess
                         sendMessageToidList(mess)
+
+                    elif bool(re.search('Subscribed to stratum server', logToStr)) == True :
+                        print 'ok'
+                        print 'stratum server', re.search('Subscribed to stratum server', logToStr)
+                        mess = " miner%s: Subscribed to stratum server" % str(i)
+                        sendMessageToidList(mess)
+
+                    elif bool(re.search('Submitting stale solution.', logToStr)) == True :
+                        print 'stale', re.search('Submitting stale solution.', logToStr)
+                        mess = " miner%s: Submitting stale solution. " % str(i)
+                        sendMessageToidList(mess)
+
+                    elif bool(re.search('FAILURE:', logToStr)) == True :
+                        print 'FAILURE', re.search('FAILURE:', logToStr)
+                        mess = " miner%s: FAILURE:GPU gave incorrect result! " % str(i)
+                        sendMessageToidList(mess)
+
                     else:
                         print "miner %s is operating.." % str(i)
 
