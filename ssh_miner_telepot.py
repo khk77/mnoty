@@ -24,8 +24,8 @@ mongoClient = pymongo.MongoClient("52.78.93.195", 27017)
 mongoDB = mongoClient.di
 
 
-idlist = [161289242, 33612976, 180121526]
-# idlist = [161289242]
+# idlist = [161289242, 33612976, 180121526]
+idlist = [161289242]
 bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
 
 
