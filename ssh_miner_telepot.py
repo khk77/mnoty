@@ -43,6 +43,59 @@ def mkLog(num):
     return logList, lastLogToStr, logToStr
 
 
+# 로그의 마지막 시간과 현재시간의 차이를 비교한다.
+# 마이너가 멈춰있는지 아닌지를 식별한다.
+def timeGap(logList):
+    # lastLogTime 최신 마지막 로그 기록 type은 string
+    # print logList, '\n'
+
+    lastLogTime = (re.findall("\d{2}:\d{2}:\d{2}",logList[-1])[0]).encode('utf-8')
+    # lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
+    # print type(lastLogTime)
+    # print 'logList[-1]: ', logList[-1]
+
+
+    # print '.split(): ',logList[-1].split()
+    # print '.split()[2]: ',logList[-1].split()[2]
+    # print 'lastLogTime', lastLogTime
+
+
+    # print ':-----',lastLogTime.split(':')
+    # print 'len-----',len(lastLogTime.split(':'))
+    # print '1-----',lastLogTime.split(':')[1]
+    # print 'i0-----',int(lastLogTime.split(':')[0])
+    # print 'i1-----',int(lastLogTime.split(':')[1])
+    # print 'i2-----',int(lastLogTime.split(':')[2])
+    FMT = '%H:%M:%S'
+    # print lastLogTime
+
+
+    nowTimeStr = datetime.now().strftime(FMT)
+    # print 'nowTimeStr', nowTimeStr
+    n = int(nowTimeStr.split(':')[1])
+    # print '현재시간', n
+    l = int(lastLogTime.split(':')[1])
+    # print '마지막시간', l
+
+    timeGap = n - l
+    timeGap = abs(timeGap)
+    # print '시간 차', timeGap
+
+    # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
+    # # timeGap 단위는 minutes임
+    # timeGap = tdelta.seconds/60
+
+    # print "timeGap:", timeGap
+    # 3분 이상이면 1을 리턴한다.
+    if bool(timeGap > 4) == True :
+        # True 1
+        return 1
+    else :
+        # False 0
+        return 0
+
+
+
 
 # DB에서 데이터 받아서 20초 마다 ‘0’해시 확인
 def checkHash():
@@ -64,19 +117,26 @@ def checkHash():
             try :
                 # 'i' is miner number, type(i) is int
                 logList, lastLogToStr, logToStr = mkLog(i)
-                print 'lastLogToStr', lastLogToStr
+                # print 'lastLogToStr', lastLogToStr
                 # print 'logToStr','\n',logToStr
 
                 if bool(re.search('0.00MH/s', logToStr)) == True :
                     print 'logToStr','\n',logToStr
                     mess = "miner%s: 0.00MH/s " % str(i)
                     print mess
+                    # log10줄에서 0.00MH/s가 있으면 다시 로그를 불러온다
+                    # 마지막 로그에 0.00MH/s가 있는지 확인하고 메세지 한다.
+                    # timeGap이 참이면, 자동 재부팅한다.
                     for j in range(1) :
                         time.sleep(17)
                         logList, lastLogToStr, logToStr = mkLog(i)
-                        if bool(re.search('0.00MH/s', logToStr)) == True :
-                            print 'logToStr','\n',logToStr
-                            mess = "miner%s: HashRate is 0.00MH/s " % str(i)
+                        if bool(re.search('0.00MH/s', lastLogToStr)) == True :
+                            print 'lastLogToStr','\n',lastLogToStr
+                            mess1 = "miner%s: HashRate is 0.00MH/s " % str(i)
+                            result1 = reboot(i)
+                            print result1
+                            mess2 = 'Ok, reboot miner%s' % i
+                            mess = mess1 +'\n'+ mess2
                             sendMessageToidList(mess)
                         else :
                             print "miner %s is operating.." % str(i)
@@ -85,27 +145,41 @@ def checkHash():
                 # print "miner %d LOG does not exist" %i
                 elif bool(re.search('Subscribed to stratum server', logToStr)) == True :
                     print 'logToStr','\n',logToStr
-                    print 'stale', re.search('Subscribed to stratum server', logToStr)
+                    print 'stratum server', re.search('Subscribed to stratum server', logToStr)
+                    # log10줄에서 stratum server가 있으면 다시 로그를 불러온다
+                    # 마지막 로그에 stratum server가 있는지 확인하고 메세지 한다.
+                    # timeGap이 참이면, 자동 재부팅한다.
                     for j in range(1) :
                         time.sleep(17)
                         logList, lastLogToStr, logToStr = mkLog(i)
                         if bool(re.search('Subscribed to stratum server', logToStr)) == True :
-                            print 'logToStr','\n',logToStr
-                            mess = " miner%s: Subscribed to stratum server" % str(i)
-                            sendMessageToidList(mess)
+                            if timeGap(logList) == 1 :
+                                # print 'logToStr','\n',logToStr
+                                mess1 = " miner%s: Subscribed to stratum server" % str(i)
+                                result1 = reboot(i)
+                                print result1
+                                mess2 = 'Ok, reboot miner%s' % i
+                                mess = mess1 +'\n'+ mess2
+                                sendMessageToidList(mess)
+                            else :
+                                print 'logToStr','\n',logToStr
+                                mess = " miner%s: Subscribed to stratum server" % str(i)
+                                sendMessageToidList(mess)
                         else :
                             print "miner %s is operating.." % str(i)
 
                 elif bool(re.search('Submitting stale solution.', logToStr)) == True :
                     print 'logToStr','\n',logToStr
                     print 'stale', re.search('Submitting stale solution.', logToStr)
+                    # log10줄에 stale 에러가 있으면, 다시 로그를 불러온다
+                    # 또다시 stale 에러가 있으면 자동 재부팅한다.
                     for j in range(1) :
                         time.sleep(17)
                         logList, lastLogToStr, logToStr = mkLog(i)
                         if bool(re.search('Submitting stale solution.', logToStr)) == True :
                             print 'logToStr','\n',logToStr
                             mess1 = " miner%s: Submitting stale solution. " % str(i)
-                            result1 = reboot(int(minerNum))
+                            result1 = reboot(i)
                             print result1
                             mess2 = 'Ok, reboot miner%s' % i
                             mess = mess1 +'\n'+ mess2
@@ -115,14 +189,16 @@ def checkHash():
 
                 elif bool(re.search('FAILURE:', logToStr)) == True :
                     print 'logToStr','\n',logToStr
-                    print 'stale', re.search('FAILURE:', logToStr)
+                    print 'FAILURE', re.search('FAILURE:', logToStr)
+                    # log10줄에 FAILURE 에러가 있으면, 다시 로그를 불러온다
+                    # 또다시 FAILURE 에러가 있으면 자동 재부팅한다.
                     for j in range(1) :
                         time.sleep(17)
                         logList, lastLogToStr, logToStr = mkLog(i)
                         if bool(re.search('FAILURE:', logToStr)) == True :
                             print 'logToStr','\n',logToStr
                             mess1 = " miner%s: FAILURE:GPU gave incorrect result! " % str(i)
-                            result1 = reboot(int(minerNum))
+                            result1 = reboot(i)
                             print result1
                             mess2 = 'Ok, reboot miner%s' % i
                             mess = mess1 +'\n'+ mess2
@@ -131,53 +207,14 @@ def checkHash():
                             print "miner %s is operating.." % str(i)
 
                 else :
-                    #lastLogTime 최신 마지막 로그 기록 type은 string
-                    # print logList, '\n'
-                    # print logList[9], '\n'
-                    # print logList[9].split(), '\n'
-                    # print logList[9].split()[2], '\n'
-
-                    lastLogTime = (re.findall("\d{2}:\d{2}:\d{2}",logList[-1])[0]).encode('utf-8')
-                    # lastLogTime = str(re.findall("\d{2}:\d{2}:\d{2}",logList[9].split()[2])[0])
-                    # print type(lastLogTime)
-                    # print 'logList[-1]: ', logList[-1]
-                    print '.split(): ',logList[-1].split()
-                    print '.split()[2]: ',logList[-1].split()[2]
-                    print 'lastLogTime', lastLogTime
-                    # print '[9][0]: ', (re.findall("\d{2}:\d{2}:\d{2}",logList[-1])[0]).encode('utf-8')
-
-                    # print ':-----',lastLogTime.split(':')
-                    # print 'len-----',len(lastLogTime.split(':'))
-                    # print '1-----',lastLogTime.split(':')[1]
-                    # print 'i0-----',int(lastLogTime.split(':')[0])
-                    # print 'i1-----',int(lastLogTime.split(':')[1])
-                    # print 'i2-----',int(lastLogTime.split(':')[2])
-                    FMT = '%H:%M:%S'
-                    # print lastLogTime
-
-
-                    nowTimeStr = datetime.now().strftime(FMT)
-                    # print 'nowTimeStr', nowTimeStr
-                    n = int(nowTimeStr.split(':')[1])
-                    # print '현재시간', n
-                    l = int(lastLogTime.split(':')[1])
-                    # print '마지막시간', l
-
-                    timeGap = n - l
-                    timeGap = abs(timeGap)
-                    # print '시간 차', timeGap
-
-                    # tdelta = datetime.strptime(nowTimeStr, FMT) - datetime.strptime(lastLogTime, FMT)
-                    # # timeGap 단위는 minutes임
-                    # timeGap = tdelta.seconds/60
-
-                    # print "timeGap:", timeGap
-
-                    # 3분 이상
-                    if timeGap > 4 :
+                    # timeGap이 참이면, 자동 재부팅한다.
+                    if timeGap(logList) == 1 :
                         print 'logToStr','\n',logToStr
-                        mess = " miner%s: stop! " % str(i)
-                        print mess
+                        mess1 = " miner%s: stop! " % str(i)
+                        result1 = reboot(i)
+                        print result1
+                        mess2 = 'Ok, reboot miner%s' % i
+                        mess = mess1 +'\n'+ mess2
                         sendMessageToidList(mess)
                     else :
                         print "miner %s is operating.." % str(i)
@@ -190,8 +227,8 @@ def checkHash():
                 sendMessageToidList(mess)
 
         # time.sleep(150)
-        # 5분
-        time.sleep(420)
+        # 9분
+        time.sleep(540)
 
 def sendMessageToidList(message):
     # bot.sendMessage(161289242, message)
