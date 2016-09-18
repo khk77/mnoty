@@ -135,7 +135,7 @@ def checkHash():
                             mess1 = "miner%s: HashRate is 0.00MH/s " % str(i)
                             result1 = reboot(i)
                             print result1
-                            mess2 = 'Ok, reboot miner%s' % i
+                            mess2 = 'Ok, auto-reboot miner%s' % i
                             mess = mess1 +'\n'+ mess2
                             sendMessageToidList(mess)
                         else :
@@ -158,7 +158,7 @@ def checkHash():
                                 mess1 = " miner%s: Subscribed to stratum server" % str(i)
                                 result1 = reboot(i)
                                 print result1
-                                mess2 = 'Ok, reboot miner%s' % i
+                                mess2 = 'Ok, auto-reboot miner%s' % i
                                 mess = mess1 +'\n'+ mess2
                                 sendMessageToidList(mess)
                             else :
@@ -181,7 +181,7 @@ def checkHash():
                             mess1 = " miner%s: Submitting stale solution. " % str(i)
                             result1 = reboot(i)
                             print result1
-                            mess2 = 'Ok, reboot miner%s' % i
+                            mess2 = 'Ok, auto-reboot miner%s' % i
                             mess = mess1 +'\n'+ mess2
                             sendMessageToidList(mess)
                         else :
@@ -200,7 +200,7 @@ def checkHash():
                             mess1 = " miner%s: FAILURE:GPU gave incorrect result! " % str(i)
                             result1 = reboot(i)
                             print result1
-                            mess2 = 'Ok, reboot miner%s' % i
+                            mess2 = 'Ok, auto-reboot miner%s' % i
                             mess = mess1 +'\n'+ mess2
                             sendMessageToidList(mess)
                         else :
@@ -213,7 +213,7 @@ def checkHash():
                         mess1 = " miner%s: stop! " % str(i)
                         result1 = reboot(i)
                         print result1
-                        mess2 = 'Ok, reboot miner%s' % i
+                        mess2 = 'Ok, auto-reboot miner%s' % i
                         mess = mess1 +'\n'+ mess2
                         sendMessageToidList(mess)
                     else :
