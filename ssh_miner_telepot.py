@@ -24,14 +24,29 @@ mongoClient = pymongo.MongoClient("52.78.93.195", 27017)
 mongoDB = mongoClient.di
 
 
-# idlist = [161289242, 33612976, 180121526]
-idlist = [161289242]
+idlist = [161289242, 33612976, 180121526]
+# idlist = [161289242]
 bot = telepot.Bot("254864168:AAHq16HhIx5J0jrySsN8nzNYliQOtZejBXk")
+
+def mkLog(num):
+    # logList, nowTimeStr = logging(i)
+    # print 'nowTimeStr', nowTimeStr
+    logList = logging(num)
+    lastLogToStr = "".join(logList[-1])
+
+    logToStr = "".join(logList)
+    logToStr = logToStr.encode('utf-8')
+    # print "logToStr: ", type(logToStr)
+
+    # if i in miners_no_log :
+    #     print "miner %d LOG does not exist" %i
+    return logList, lastLogToStr, logToStr
+
 
 
 # DB에서 데이터 받아서 20초 마다 ‘0’해시 확인
 def checkHash():
-    while True:
+    while True :
         # # print '1) cp_miner_list', cp_miner_list
         # if set(miner_list) == set(cp_miner_list):
         #     mlist = miner_list
@@ -39,51 +54,83 @@ def checkHash():
         #     # print '2) cp_miner_list', cp_miner_list
         #     mlist = cp_miner_list
         # print 'mlist', mlist
-        for i in miners_no_log:
+        for i in miners_no_log :
             if i in cp_miner_list:
                 cp_miner_list.remove(i)
         mlist = cp_miner_list
 
 
-        for i in mlist:
+        for i in mlist :
             try :
-                # logList, nowTimeStr = logging(i)
-                # print 'nowTimeStr', nowTimeStr
-                logList = logging(i)
-                lastLogToStr = "".join(logList[-1])
+                # 'i' is miner number, type(i) is int
+                logList, lastLogToStr, logToStr = mkLog(i)
                 print 'lastLogToStr', lastLogToStr
-                logToStr = "".join(logList)
-                logToStr = logToStr.encode('utf-8')
-                # print "logToStr: ", type(logToStr)
-                print 'logToStr','\n',logToStr
-                # if i in miners_no_log :
-                #     print "miner %d LOG does not exist" %i
+                # print 'logToStr','\n',logToStr
 
-
-                if bool(re.search('0.00MH/s', logToStr)) == None :
-                    print '111111'
+                if bool(re.search('0.00MH/s', logToStr)) == True :
+                    print 'logToStr','\n',logToStr
                     mess = "miner%s: 0.00MH/s " % str(i)
                     print mess
-                    sendMessageToidList(mess)
+                    for j in range(1) :
+                        time.sleep(17)
+                        logList, lastLogToStr, logToStr = mkLog(i)
+                        if bool(re.search('0.00MH/s', logToStr)) == True :
+                            print 'logToStr','\n',logToStr
+                            mess = "miner%s: HashRate is 0.00MH/s " % str(i)
+                            sendMessageToidList(mess)
+                        else :
+                            print "miner %s is operating.." % str(i)
 
                 # elif i in miners_no_log :
                 # print "miner %d LOG does not exist" %i
-                elif bool(re.search('Subscribed to stratum server', lastLogToStr)) == True :
-                    print 'stratum server', re.search('Subscribed to stratum server', logToStr)
-                    mess = " miner%s: Subscribed to stratum server" % str(i)
-                    sendMessageToidList(mess)
+                elif bool(re.search('Subscribed to stratum server', logToStr)) == True :
+                    print 'logToStr','\n',logToStr
+                    print 'stale', re.search('Subscribed to stratum server', logToStr)
+                    for j in range(1) :
+                        time.sleep(17)
+                        logList, lastLogToStr, logToStr = mkLog(i)
+                        if bool(re.search('Subscribed to stratum server', logToStr)) == True :
+                            print 'logToStr','\n',logToStr
+                            mess = " miner%s: Subscribed to stratum server" % str(i)
+                            sendMessageToidList(mess)
+                        else :
+                            print "miner %s is operating.." % str(i)
 
-                elif bool(re.search('Submitting stale solution.', lastLogToStr)) == True :
+                elif bool(re.search('Submitting stale solution.', logToStr)) == True :
+                    print 'logToStr','\n',logToStr
                     print 'stale', re.search('Submitting stale solution.', logToStr)
-                    mess = " miner%s: Submitting stale solution. " % str(i)
-                    sendMessageToidList(mess)
+                    for j in range(1) :
+                        time.sleep(17)
+                        logList, lastLogToStr, logToStr = mkLog(i)
+                        if bool(re.search('Submitting stale solution.', logToStr)) == True :
+                            print 'logToStr','\n',logToStr
+                            mess1 = " miner%s: Submitting stale solution. " % str(i)
+                            result1 = reboot(int(minerNum))
+                            print result1
+                            mess2 = 'Ok, reboot miner%s' % i
+                            mess = mess1 +'\n'+ mess2
+                            sendMessageToidList(mess)
+                        else :
+                            print "miner %s is operating.." % str(i)
 
-                elif bool(re.search('FAILURE:', lastLogToStr)) == True :
-                    print 'FAILURE', re.search('FAILURE:', logToStr)
-                    mess = " miner%s: FAILURE:GPU gave incorrect result! " % str(i)
-                    sendMessageToidList(mess)
+                elif bool(re.search('FAILURE:', logToStr)) == True :
+                    print 'logToStr','\n',logToStr
+                    print 'stale', re.search('FAILURE:', logToStr)
+                    for j in range(1) :
+                        time.sleep(17)
+                        logList, lastLogToStr, logToStr = mkLog(i)
+                        if bool(re.search('FAILURE:', logToStr)) == True :
+                            print 'logToStr','\n',logToStr
+                            mess1 = " miner%s: FAILURE:GPU gave incorrect result! " % str(i)
+                            result1 = reboot(int(minerNum))
+                            print result1
+                            mess2 = 'Ok, reboot miner%s' % i
+                            mess = mess1 +'\n'+ mess2
+                            sendMessageToidList(mess)
+                        else :
+                            print "miner %s is operating.." % str(i)
 
-                else:
+                else :
                     #lastLogTime 최신 마지막 로그 기록 type은 string
                     # print logList, '\n'
                     # print logList[9], '\n'
@@ -127,17 +174,15 @@ def checkHash():
                     # print "timeGap:", timeGap
 
                     # 3분 이상
-                    if timeGap > 4:
+                    if timeGap > 4 :
+                        print 'logToStr','\n',logToStr
                         mess = " miner%s: stop! " % str(i)
                         print mess
                         sendMessageToidList(mess)
-                        # mess = " miner%s: stop! " % str(i)
-                        # print mess
-                        # sendMessageToidList(mess)
-                    else:
+                    else :
                         print "miner %s is operating.." % str(i)
 
-            except Exception as e:
+            except Exception as e :
                 m, r = "miner%s: [Error] " % str(i), e
                 # mess = m + repr(r)
                 mess = m + repr(r)+'\n'+ logToStr
@@ -146,7 +191,7 @@ def checkHash():
 
         # time.sleep(150)
         # 5분
-        time.sleep(300)
+        time.sleep(420)
 
 def sendMessageToidList(message):
     # bot.sendMessage(161289242, message)
@@ -167,37 +212,35 @@ def sendMessageToidList(message):
 
 def logging(minerNum):
     # try:
-    # result = ""
+        # result = ""
 
-    # if minerNum in miners_no_log :
-    #     result = "miner%d: LOG does not exist" % minerNum
+        # if minerNum in miners_no_log :
+        #     result = "miner%d: LOG does not exist" % minerNum
 
-    # elif (minerNum < 9) or (minerNum == 14) :
-    if (minerNum < 9) | (minerNum == 14):
-        client = wrap.SSHClient('222.98.97.238', 50000+int(minerNum), 'miner'+str(minerNum), 'rlagnlrud' )
+        # elif (minerNum < 9) or (minerNum == 14) :
+        if (minerNum < 9) | (minerNum == 14):
+            client = wrap.SSHClient('222.98.97.238', 50000+int(minerNum), 'miner'+str(minerNum), 'rlagnlrud' )
 
-        # result is list type
-        result = client.execute('tail -10 ethminer.err.log')['out']
-        # a = result.encode('utf-8').....에러
-        # print a ...리스트
-        # print len(result)
+            # result is list type
+            result = client.execute('tail -10 ethminer.err.log')['out']
+            # a = result.encode('utf-8').....에러
+            # print a ...리스트
+            # print len(result)
 
-    # elif minerNum in [10,11,12,13,14]:
-    #     portMapping = {9:8080,  10:22, 11:443, 12:444, 13:80, 14:3390}
-    #     client = wrap.SSHClient('ggs134.gonetis.com', portMapping[int(minerNum)], 'miner'+str(minerNum), 'rlagnlrud' )
-    #     result = client.execute('tail -10 ethminer.err.log')['out']
+        # elif minerNum in [10,11,12,13,14]:
+        #     portMapping = {9:8080,  10:22, 11:443, 12:444, 13:80, 14:3390}
+        #     client = wrap.SSHClient('ggs134.gonetis.com', portMapping[int(minerNum)], 'miner'+str(minerNum), 'rlagnlrud' )
+        #     result = client.execute('tail -10 ethminer.err.log')['out']
 
-    else:
-        client = wrap.SSHClient('goldrush.iptime.org', 50000+int(minerNum), 'miner'+str(minerNum), 'rlagnlrud' )
-        result = client.execute('tail -10 ethminer.err.log')['out']
+        else:
+            client = wrap.SSHClient('goldrush.iptime.org', 50000+int(minerNum), 'miner'+str(minerNum), 'rlagnlrud' )
+            result = client.execute('tail -10 ethminer.err.log')['out']
 
-    # nowTimeStr = datetime.now().strftime('%H:%M:%S')
-    # return result, nowTimeStr
-    return result
+        # nowTimeStr = datetime.now().strftime('%H:%M:%S')
+        # return result, nowTimeStr
+        return result
 
 
-    # except Exception as e:
-    #     pass
 
 
 # def recmessage(tokenlist):
@@ -261,107 +304,139 @@ def recieveMessage(id, msg):
     # while 1:
         # response = bot.getUpdates()
     res = msg['text']
+    try:
+        # if bool(re.search('l(?i)og\(*', res)) == True:
+        if bool(re.search("l(?i)og", res)) == True:
+            # type(res) is list
+            res = re.findall(r"[0-9]*",res)
+            # type(res[0]) is string
+            # print 'res',res
+            minerNum = res[3]
+            print type(minerNum)
+            result1 = logging(int(minerNum))
+            result = convert_list(result1)
+            bot.sendMessage(id, result)
 
-    # if bool(re.search('l(?i)og\(*', res)) == True:
-    if bool(re.search("l(?i)og", res)) == True:
-        # type(res) is list
-        res = re.findall(r"[0-9]*",res)
-        # type(res[0]) is string
-        # print res
-        minerNum = res[3]
-        # print minerNum
-        # type(minerNum) is string
-        result1 = logging(int(minerNum))
-        result = convert_list(result1)
-        # type(result) is list
-        # sendMessage(result)
-        print result
-        bot.sendMessage(id, result)
+            # for k in range(3, len(res)):
+            #     if (k%2==1) == True:
+            #         minerNum = res[k]
+            #         # print k, minerNum
+            #         # type(minerNum) is string
+            #         result1 = logging(int(minerNum))
+            #         print result1, type(result1)
+            #         # type(result1) is list
+            #         print res
+            #         result = convert_list(result1)
+            #         # type(result) is list
+            #         # sendMessage(result)
+            #         print result
+            #         bot.sendMessage(id, result)
 
-    elif bool(re.search("r(?i)estart", res)) == True:
-        res = re.findall(r"[0-9]*",res)
-        # print res
-        minerNum = res[7]
-        # print minerNum
-        # type(minerNum) is string
-        print "restartAll start"
-        result1 = restartAll(int(minerNum))
-        print result1
-        bot.sendMessage(id, 'RestartAll miner%s' % minerNum)
+        elif bool(re.search("r(?i)estart", res)) == True:
+            res = re.findall(r"[0-9]*",res)
+            # print res
+            minerNum = res[7]
+            # print minerNum
+            # type(minerNum) is string
+            print "restartAll start"
+            result1 = restartAll(int(minerNum))
+            print result1
+            bot.sendMessage(id, 'Ok, restartAll miner%s' % minerNum)
 
-    elif bool(re.search("s(?i)top", res)) == True:
-        res = re.findall(r"[0-9]*",res)
-        # print res
-        minerNum = res[4]
-        # print minerNum
-        # type(minerNum) is string
-        print "stop start"
-        result1 = stop(int(minerNum))
-        print result1
-        bot.sendMessage(id, 'Stop miner%s' % minerNum)
+        elif bool(re.search("s(?i)top", res)) == True:
+            res = re.findall(r"[0-9]*",res)
+            # print res
+            minerNum = res[4]
+            # print minerNum
+            # type(minerNum) is string
+            print "stop start"
+            result1 = stop(int(minerNum))
+            print result1
+            bot.sendMessage(id, 'Ok, stop miner%s' % minerNum)
 
-    elif bool(re.search("r(?i)eread", res)) == True:
-        res = re.findall(r"[0-9]*",res)
-        # print res
-        minerNum = res[6]
-        # print minerNum
-        # type(minerNum) is string
-        print "reread start"
-        result1 = reread(int(minerNum))
-        print result1
-        bot.sendMessage(id, 'Reread miner%s' % minerNum)
+        elif bool(re.search("r(?i)eread", res)) == True:
+            res = re.findall(r"[0-9]*",res)
+            # print res
+            minerNum = res[6]
+            # print minerNum
+            # type(minerNum) is string
+            print "reread start"
+            result1 = reread(int(minerNum))
+            print result1
+            bot.sendMessage(id, 'Ok, reread miner%s' % minerNum)
 
-    elif bool(re.search("u(?i)pdate", res)) == True:
-        res = re.findall(r"[0-9]*",res)
-        # print res
-        minerNum = res[6]
-        # print minerNum
-        # type(minerNum) is string
-        print "update start"
-        result1 = update(int(minerNum))
-        print result1
-        bot.sendMessage(id, 'Update miner%s' % minerNum)
+        elif bool(re.search("u(?i)pdate", res)) == True:
+            res = re.findall(r"[0-9]*",res)
+            # print res
+            minerNum = res[6]
+            # print minerNum
+            # type(minerNum) is string
+            print "update start"
+            result1 = update(int(minerNum))
+            print result1
+            bot.sendMessage(id, 'Ok, update miner%s' % minerNum)
 
-    elif bool(re.search("r(?i)eboot", res)) == True:
-        res = re.findall(r"[0-9]*",res)
-        minerNum = res[6]
-        print type(minerNum)
-        print "reboot start"
-        result1 = reboot(int(minerNum))
-        print result1
-        bot.sendMessage(id, 'Reboot miner%s' % minerNum)
+        elif bool(re.search("r(?i)eboot", res)) == True:
+            res = re.findall(r"[0-9]*",res)
+            # print res
+            # minerNum = res[6]
+            # print 'res[6]', minerNum
+            # print 'len(res)', len(res)
+            for k in range(6, len(res)):
+                if (k%2==0) == True:
+                    minerNum = res[k]
+                    # print k, minerNum
+                    # print type(minerNum)
+                    # print "reboot start"
+                    result1 = reboot(int(minerNum))
+                    print result1
+                    bot.sendMessage(id, 'Ok, reboot miner%s' % minerNum)
 
 
-    # on off = 알람 끄고 켜기
-    elif bool(re.search('o(?i)ff', res)) == True:
-        res = re.findall(r"[0-9]+",res)
-        minerNum = res[0]
-        # print minerNum
-        cp_miner_list.remove(int(minerNum))
-        # sendMessage('TurnOff miner%s' % minerNum)
-        bot.sendMessage(id, 'AlarmOff miner%s' % minerNum)
+        # on off = 알람 끄고 켜기
+        elif bool(re.search('o(?i)ff', res)) == True:
+            res = re.findall(r"[0-9]+",res)
+            # print res
+            # print len(res)
+            # minerNum = res[0]
+            # print minerNum
 
-    elif bool(re.search('o(?i)n', res)) == True:
-        res = re.findall(r"[0-9]+",res)
-        minerNum = res[0]
-        cp_miner_list.append(int(minerNum))
-        # sendMessage('TurnOn miner%s' % minerNum)
-        bot.sendMessage(id, 'AlarmOn miner%s' % minerNum)
+            for k in range(len(res)):
+                minerNum = res[k]
+                cp_miner_list.remove(int(minerNum))
+                # sendMessage('TurnOff miner%s' % minerNum)
+                bot.sendMessage(id, 'Ok, alarmOff miner%s' % minerNum)
 
-    # 알람 켜진 마이너 리스트
-    elif bool(re.search('l(?i)ist', res)) == True:
-        for i in miners_no_log:
-            if i in cp_miner_list:
-                cp_miner_list.remove(i)
-        print cp_miner_list
+        elif bool(re.search('o(?i)n', res)) == True:
+            res = re.findall(r"[0-9]+",res)
+            # print res
+            # print len(res)
+            for k in range(len(res)):
+                minerNum = res[k]
+                print minerNum
+                cp_miner_list.append(int(minerNum))
+                # sendMessage('TurnOn miner%s' % minerNum)
+                bot.sendMessage(id, 'Ok, alarmOn miner%s' % minerNum)
 
-        mlist= str(cp_miner_list)
-        bot.sendMessage(id, 'Operating miners%s' % mlist)
+        # 알람 켜진 마이너 리스트
+        elif bool(re.search('l(?i)ist', res)) == True:
+            for i in miners_no_log:
+                if i in cp_miner_list:
+                    cp_miner_list.remove(i)
+            print cp_miner_list
 
-    else:
-        pass
-    # time.sleep(20)
+            mlist= str(list(set(cp_miner_list)))
+            bot.sendMessage(id, 'Operating miners%s' % mlist)
 
+        else:
+            pass
+        # time.sleep(20)
+    except Exception as e :
+        m, r = "miner%s: [Error] " %minerNum, e
+        # mess = m + repr(r)
+        mess = m + repr(r)
+        print mess
+        sendMessageToidList(mess)
 
 def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
